@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ATHENA</title>
+<link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Orbitron:wght@400;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --acid: #00ff88;
+    --plasma: #ff0066;
+    --void: #0a0010;
+    --electric: #7700ff;
+    --sun: #ffcc00;
+    --ice: #00eeff;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--void);
+    color: #fff;
+    font-family: 'Space Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+    cursor: crosshair;
+  }
+
+  /* ── GRID BACKGROUND ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,255,136,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,136,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+    animation: gridshift 20s linear infinite;
+  }
+
+  @keyframes gridshift {
+    0%   { background-position: 0 0; }
+    100% { background-position: 40px 40px; }
+  }
+
+  /* ── SCANLINES ── */
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.15) 2px,
+      rgba(0,0,0,0.15) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* ── NOISE OVERLAY ── */
+  .noise {
+    position: fixed; inset: 0;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* ── FLOATING ORBS ── */
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    z-index: 0;
+    animation: orbfloat linear infinite;
+  }
+  .orb1 { width: 400px; height: 400px; background: rgba(119,0,255,0.25); top: -100px; left: -100px; animation-duration: 18s; }
+  .orb2 { width: 300px; height: 300px; background: rgba(255,0,102,0.2); bottom: -50px; right: -50px; animation-duration: 22s; animation-direction: reverse; }
+  .orb3 { width: 200px; height: 200px; background: rgba(0,255,136,0.15); top: 50%; left: 50%; animation-duration: 15s; }
+
+  @keyframes orbfloat {
+    0%   { transform: translate(0,0) scale(1); }
+    33%  { transform: translate(40px,-30px) scale(1.1); }
+    66%  { transform: translate(-20px,40px) scale(0.9); }
+    100% { transform: translate(0,0) scale(1); }
+  }
+
+  /* ── WRAPPER ── */
+  .wrapper {
+    position: relative;
+    z-index: 10;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 16px 60px;
+  }
+
+  /* ── HEADER ── */
+  header {
+    width: 100%;
+    max-width: 700px;
+    padding: 48px 0 0;
+    text-align: center;
+    position: relative;
+  }
+
+  .logo-wrap {
+    position: relative;
+    display: inline-block;
+  }
+
+  .logo {
+    font-family: 'Black Ops One', cursive;
+    font-size: clamp(64px, 22vw, 120px);
+    letter-spacing: -2px;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--acid) 0%, var(--ice) 40%, var(--electric) 70%, var(--plasma) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 30px rgba(0,255,136,0.5)) drop-shadow(0 0 60px rgba(119,0,255,0.3));
+    animation: logoglitch 5s infinite;
+    position: relative;
+  }
+
+  @keyframes logoglitch {
+    0%, 92%, 100% { transform: none; filter: drop-shadow(0 0 30px rgba(0,255,136,0.5)) drop-shadow(0 0 60px rgba(119,0,255,0.3)); }
+    93%  { transform: translate(-3px, 1px) skewX(-2deg); filter: drop-shadow(4px 0 0 var(--plasma)) drop-shadow(-4px 0 0 var(--ice)); }
+    94%  { transform: translate(3px, -1px) skewX(2deg); }
+    95%  { transform: translate(-2px, 2px); filter: drop-shadow(0 0 30px rgba(0,255,136,0.5)); }
+    96%  { transform: none; }
+  }
+
+  .logo-sub {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(9px, 3vw, 13px);
+    letter-spacing: 8px;
+    color: rgba(255,255,255,0.4);
+    text-transform: uppercase;
+    margin-top: -4px;
+    margin-bottom: 32px;
+  }
+
+  .corner-tag {
+    position: absolute;
+    font-family: 'Orbitron', monospace;
+    font-size: 9px;
+    color: var(--acid);
+    opacity: 0.5;
+    letter-spacing: 2px;
+  }
+  .corner-tag.tl { top: 48px; left: 0; }
+  .corner-tag.tr { top: 48px; right: 0; }
+
+  /* ── CARD ── */
+  .card {
+    width: 100%;
+    max-width: 560px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(0,255,136,0.15);
+    border-radius: 24px;
+    padding: clamp(24px, 6vw, 40px);
+    backdrop-filter: blur(20px);
+    position: relative;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--acid), var(--electric), var(--plasma), transparent);
+    animation: scanline 3s ease-in-out infinite;
+  }
+
+  @keyframes scanline {
+    0%, 100% { opacity: 0.3; transform: scaleX(0.5); }
+    50% { opacity: 1; transform: scaleX(1); }
+  }
+
+  .card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at top left, rgba(119,0,255,0.08), transparent 60%),
+                radial-gradient(ellipse at bottom right, rgba(0,255,136,0.05), transparent 60%);
+    pointer-events: none;
+  }
+
+  /* ── FORM ELEMENTS ── */
+  .field {
+    margin-bottom: 20px;
+    position: relative;
+  }
+
+  label {
+    display: block;
+    font-family: 'Orbitron', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--acid);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+
+  input, select {
+    width: 100%;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid rgba(0,255,136,0.2);
+    border-radius: 12px;
+    padding: 14px 18px;
+    color: #fff;
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.3s;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  input:focus, select:focus {
+    border-color: var(--acid);
+    box-shadow: 0 0 0 3px rgba(0,255,136,0.1), 0 0 20px rgba(0,255,136,0.15);
+    background: rgba(0,255,136,0.04);
+  }
+
+  input::placeholder { color: rgba(255,255,255,0.2); }
+
+  select option { background: #0a0010; color: #fff; }
+
+  .select-wrap { position: relative; }
+  .select-wrap::after {
+    content: '▼';
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--acid);
+    font-size: 10px;
+    pointer-events: none;
+  }
+
+  /* ── COUNT DISPLAY ── */
+  .count-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .count-row input[type=range] {
+    flex: 1;
+    padding: 0;
+    height: 6px;
+    border-radius: 99px;
+    border: none;
+    background: rgba(255,255,255,0.1);
+    cursor: pointer;
+    accent-color: var(--acid);
+  }
+
+  .count-badge {
+    font-family: 'Orbitron', monospace;
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--acid);
+    min-width: 48px;
+    text-align: center;
+    background: rgba(0,255,136,0.08);
+    border: 1px solid rgba(0,255,136,0.2);
+    border-radius: 8px;
+    padding: 6px 10px;
+  }
+
+  /* ── BUTTON ── */
+  .btn {
+    width: 100%;
+    padding: 18px;
+    background: linear-gradient(135deg, var(--electric), var(--plasma));
+    border: none;
+    border-radius: 14px;
+    color: #fff;
+    font-family: 'Black Ops One', cursive;
+    font-size: clamp(18px, 5vw, 22px);
+    letter-spacing: 3px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s;
+    margin-top: 8px;
+    text-transform: uppercase;
+  }
+
+  .btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--acid), var(--ice));
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .btn:hover::before { opacity: 1; }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(119,0,255,0.5), 0 0 60px rgba(0,255,136,0.2); }
+  .btn:active { transform: translateY(0); }
+
+  .btn span { position: relative; z-index: 1; }
+
+  .btn.loading {
+    pointer-events: none;
+    opacity: 0.7;
+  }
+
+  /* ── RIPPLE ── */
+  .ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+    transform: scale(0);
+    animation: ripple 0.6s linear;
+    pointer-events: none;
+  }
+  @keyframes ripple {
+    to { transform: scale(4); opacity: 0; }
+  }
+
+  /* ── STATUS ── */
+  .status {
+    margin-top: 20px;
+    padding: 16px 20px;
+    border-radius: 12px;
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    display: none;
+    animation: fadein 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  @keyframes fadein {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .status.success {
+    display: block;
+    background: rgba(0,255,136,0.08);
+    border: 1px solid rgba(0,255,136,0.3);
+    color: var(--acid);
+  }
+
+  .status.error {
+    display: block;
+    background: rgba(255,0,102,0.08);
+    border: 1px solid rgba(255,0,102,0.3);
+    color: var(--plasma);
+  }
+
+  .status-icon { font-size: 20px; margin-right: 8px; }
+
+  /* ── PROGRESS BAR ── */
+  .progress-wrap {
+    margin-top: 20px;
+    display: none;
+  }
+  .progress-wrap.active { display: block; }
+  .progress-label {
+    font-family: 'Orbitron', monospace;
+    font-size: 10px;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .progress-bar {
+    height: 4px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--electric), var(--acid));
+    border-radius: 99px;
+    width: 0%;
+    transition: width 0.5s ease;
+    box-shadow: 0 0 10px var(--acid);
+  }
+
+  /* ── DIVIDER ── */
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 28px 0;
+    opacity: 0.3;
+  }
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0,255,136,0.5), transparent);
+  }
+  .divider span {
+    font-family: 'Orbitron', monospace;
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--acid);
+  }
+
+  /* ── STATS ROW ── */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 28px;
+  }
+
+  .stat {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 12px;
+    padding: 14px 10px;
+    text-align: center;
+  }
+
+  .stat-num {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(18px, 5vw, 24px);
+    font-weight: 900;
+    color: var(--acid);
+    display: block;
+  }
+
+  .stat-label {
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: rgba(255,255,255,0.3);
+    text-transform: uppercase;
+    margin-top: 4px;
+    display: block;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    margin-top: 48px;
+    font-family: 'Orbitron', monospace;
+    font-size: 9px;
+    letter-spacing: 4px;
+    color: rgba(255,255,255,0.1);
+    text-align: center;
+  }
+
+  /* ── CORNER DECORATIONS ── */
+  .card-corner {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    opacity: 0.4;
+  }
+  .card-corner.tl { top: 12px; left: 12px; border-top: 2px solid var(--acid); border-left: 2px solid var(--acid); }
+  .card-corner.tr { top: 12px; right: 12px; border-top: 2px solid var(--acid); border-right: 2px solid var(--acid); }
+  .card-corner.bl { bottom: 12px; left: 12px; border-bottom: 2px solid var(--acid); border-left: 2px solid var(--acid); }
+  .card-corner.br { bottom: 12px; right: 12px; border-bottom: 2px solid var(--acid); border-right: 2px solid var(--acid); }
+
+  /* ── PULSE DOT ── */
+  .pulse-dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--acid);
+    margin-right: 8px;
+    animation: pulse 1.5s ease-in-out infinite;
+    vertical-align: middle;
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(0,255,136,0.6); }
+    50% { box-shadow: 0 0 0 6px rgba(0,255,136,0); }
+  }
+
+  /* ── MOBILE TWEAKS ── */
+  @media (max-width: 480px) {
+    .card { border-radius: 20px; }
+    .stats { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .stat { padding: 10px 6px; }
+    .btn { font-size: 17px; letter-spacing: 2px; padding: 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="noise"></div>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+
+<div class="wrapper">
+  <header>
+    <span class="corner-tag tl">SYS::ONLINE</span>
+    <span class="corner-tag tr">V1.0.0</span>
+    <div class="logo-wrap">
+      <div class="logo">ATHENA</div>
+    </div>
+    <div class="logo-sub">AUTONOMOUS TRANSMISSION ENGINE</div>
+  </header>
+
+  <div class="card">
+    <div class="card-corner tl"></div>
+    <div class="card-corner tr"></div>
+    <div class="card-corner bl"></div>
+    <div class="card-corner br"></div>
+
+    <div class="field">
+      <label>⚡ Target Address</label>
+      <input type="email" id="recipient" placeholder="target@domain.com" autocomplete="off"/>
+    </div>
+
+    <div class="field">
+      <label>📡 Transmission Count</label>
+      <div class="count-row">
+        <input type="range" id="count-slider" min="1" max="500" value="5" oninput="updateCount(this.value)"/>
+        <div class="count-badge" id="count-display">5</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>🔖 Subject Protocol</label>
+      <div class="select-wrap">
+        <select id="subject-style">
+          <option value="numbered">NUMBERED // Message #1, #2...</option>
+          <option value="random">RANDOM REF // Ref: A3X9K2...</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="divider"><span>INITIATE</span></div>
+
+    <button class="btn" id="send-btn" onclick="sendEmails(event)">
+      <span>🚀 LAUNCH SEQUENCE</span>
+    </button>
+
+    <div class="progress-wrap" id="progress-wrap">
+      <div class="progress-label">
+        <span><span class="pulse-dot"></span>TRANSMITTING</span>
+        <span id="progress-pct">0%</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+    </div>
+
+    <div class="status" id="status"></div>
+
+    <div class="stats">
+      <div class="stat">
+        <span class="stat-num" id="stat-sent">0</span>
+        <span class="stat-label">Sent</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num" id="stat-sessions">0</span>
+        <span class="stat-label">Sessions</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num" id="stat-msgs">5</span>
+        <span class="stat-label">Messages</span>
+      </div>
+    </div>
+  </div>
+
+  <footer>ATHENA &nbsp;·&nbsp; BUILT WITH PYTHON &nbsp;·&nbsp; CLASSIFIED</footer>
+</div>
+
+<script>
+  let totalSent = 0;
+  let totalSessions = 0;
+
+  function updateCount(val) {
+    document.getElementById('count-display').textContent = val;
+    document.getElementById('stat-msgs').textContent = val;
+  }
+
+  function createRipple(btn, e) {
+    const rect = btn.getBoundingClientRect();
+    const ripple = document.createElement('span');
+    ripple.classList.add('ripple');
+    const size = Math.max(rect.width, rect.height);
+    ripple.style.width = ripple.style.height = size + 'px';
+    ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+    ripple.style.top  = (e.clientY - rect.top  - size / 2) + 'px';
+    btn.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 700);
+  }
+
+  async function sendEmails(e) {
+    const btn = document.getElementById('send-btn');
+    const recipient = document.getElementById('recipient').value.trim();
+    const count = parseInt(document.getElementById('count-slider').value);
+    const subjectStyle = document.getElementById('subject-style').value;
+    const statusEl = document.getElementById('status');
+    const progressWrap = document.getElementById('progress-wrap');
+
+    createRipple(btn, e);
+
+    if (!recipient) {
+      showStatus('error', '⚠️ No target address specified.');
+      return;
+    }
+
+    btn.classList.add('loading');
+    btn.querySelector('span').textContent = '⏳ TRANSMITTING...';
+    progressWrap.classList.add('active');
+    statusEl.style.display = 'none';
+
+    // Animate progress bar
+    let prog = 0;
+    const interval = setInterval(() => {
+      prog = Math.min(prog + (100 / (count * 0.8)), 90);
+      document.getElementById('progress-fill').style.width = prog + '%';
+      document.getElementById('progress-pct').textContent = Math.round(prog) + '%';
+    }, 200);
+
+    try {
+      const res = await fetch('/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ recipient, count, subject_style: subjectStyle })
+      });
+      const data = await res.json();
+
+      clearInterval(interval);
+      document.getElementById('progress-fill').style.width = '100%';
+      document.getElementById('progress-pct').textContent = '100%';
+
+      if (data.success) {
+        totalSent += data.sent;
+        totalSessions += 1;
+        document.getElementById('stat-sent').textContent = totalSent;
+        document.getElementById('stat-sessions').textContent = totalSessions;
+        showStatus('success', `✅ ${data.sent} transmissions delivered to ${recipient}`);
+      } else {
+        showStatus('error', '❌ ' + (data.error || 'Unknown error'));
+      }
+    } catch (err) {
+      clearInterval(interval);
+      showStatus('error', '❌ Connection failed: ' + err.message);
+    }
+
+    setTimeout(() => progressWrap.classList.remove('active'), 1500);
+    btn.classList.remove('loading');
+    btn.querySelector('span').textContent = '🚀 LAUNCH SEQUENCE';
+  }
+
+  function showStatus(type, msg) {
+    const el = document.getElementById('status');
+    el.className = 'status ' + type;
+    el.innerHTML = msg;
+    el.style.display = 'block';
+  }
+</script>
+</body>
+</html>
