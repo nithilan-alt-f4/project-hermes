@@ -88,7 +88,7 @@ def index():
             resend.Emails.send(params)
             record_email_sent(rand_domain)
             logs.append(f"Sent #{a1} via {rand_domain}")
-    return render_template("index.html", logs=logs)
+    return render_template("sending.html", logs=logs)
 
 
 if __name__ == "__main__":
