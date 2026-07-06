@@ -1,2 +1,6 @@
 flask
-yagmail
+resend
+os
+csv
+random
+pymongo
