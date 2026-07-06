@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Project Athena</title>
+    <style>
+        body {
+            background-image: url('https://placehold.co/1600x900/ff00ff/00ffff?text=BACKGROUND');
+            background-size: cover;
+            background-repeat: no-repeat;
+            font-family: "Comic Sans MS", "Comic Sans", cursive;
+            font-style: italic;
+            font-size: 32px;
+            color: white;
+            text-shadow: 3px 3px 0px black;
+            text-align: left;
+            padding: 40px;
+        }
+
+        h1 {
+            font-size: 64px;
+            font-style: italic;
+        }
+
+        form {
+            background: rgba(0,0,0,0.5);
+            display: inline-block;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+        }
+
+        input {
+            font-family: "Comic Sans MS", cursive;
+            font-size: 24px;
+            font-style: italic;
+            padding: 5px;
+        }
+
+        button {
+            font-family: "Comic Sans MS", cursive;
+            font-style: italic;
+            font-size: 28px;
+            margin-top: 20px;
+            padding: 10px 20px;
+        }
+
+        ul {
+            background: rgba(0,0,0,0.5);
+            padding: 20px;
+            margin-top: 30px;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>i love grafic design</h1>
+
+    <form method="POST">
+        <label>Receiver email:</label>
+        <input type="email" name="recipient" required>
+
+        <label>Number of emails:</label>
+        <input type="number" name="count" min="1" required>
+
+        <button type="submit">SEND EM</button>
+    </form>
+
+    {% if logs %}
+    <ul>
+        {% for line in logs %}
+            <li>{{ line }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+</body>
+</html>
