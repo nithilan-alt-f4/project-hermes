@@ -1,78 +1,96 @@
-from flask import Flask, request, jsonify, send_from_directory
-import yagmail
+import resend
+import csv
 import random
+from pymongo import MongoClient
+from flask import render_template, Flask, request
 import os
 
-app = Flask(__name__, static_folder=".")
+api_key1 = os.environ.get("KEY_1")
+api_key2 = os.environ.get("KEY_2")
+api_key3 = os.environ.get("KEY_3")
+MONGODB_CONNECTION_STRING = os.environ.get("MONGO_URL")
 
-MESSAGES = [
-    """#🇯🇵Japan is turning footsteps into electricity!Using piezoelectric tiles, every step you take generates a small amount of energy Millions of steps together can power LED lights and displays in busy places like Shibuya Station. A brilliant way to create a sustainable and smart city. (syncopation)""",
+client = MongoClient("MONGODB_CONNECTION_STRING")
+db = client["athena"]
+email_stats = db["email_stats"]
 
-    """Tonight, @thv took a turn in the audience as he watched @gracieabrams and @dojacat perform at #vogueWorld: Hollywood. No stranger to a fashion show either, the @bts.bighitofficial star dressed in a look that could have easily appeared on the runway.""",
+domains = {
+    "sgsdfgdsf.jo3.org"    : api_key1,
+    "f2.sgsdfgdsf.jo3.org" : api_key2,
+    "f3.sgsdfgdsf.jo3.org" : api_key3,
+}
 
-    """No problem! Here's the information about the Mercedes CLR GTR:
-The Mercedes CLR GTR is a remarkable racing car celebrated for its outstanding performance and sleek design. Powered by a potent 6.0-liter V12 engine, it delivers over 600 horsepower. 🔧
-Acceleration from 0 to 100 km/h takes approximately 3.7 seconds, with a remarkable top speed surpassing 320 km/h. 🥇
-Incorporating advanced aerodynamic features and cutting-edge stability technologies, the CLR GTR ensures exceptional stability and control, particularly during high-speed maneuvers. 💨
-Originally priced around $1.5 million, the Mercedes CLR GTR is considered one of the most exclusive and prestigious racing cars ever produced. 💰
-Its limited production run of just five units adds to its rarity, making it highly sought after by racing enthusiasts and collectors worldwide. 🌎""",
 
-    """IF UR NOT ZOINK STAY BACK
-zoink-senpai… ohayo gozaimasu!! 🌸✨
-i've been hiding these feelings in my kokoro for so long… but today… I CAN'T HOLD BACK MY LOVE ANYMORE 😭💖
-zoink-sama… you are my ichiban… my legend… my TOP 1 OF MY HEART!!! 🔥
-the way you play Geometry Dash… it's not human… it's DIVINE…
-every click… every jump… every frame-perfect input…
-it's like watching a god descend into the level editor itself… 😭🙏""",
+def generate_full_name(filepath):
+    with open(filepath, newline="", encoding="utf-8") as f:
+        reader = list(csv.DictReader(f))
+    first = random.choice(reader)["Name"].capitalize()
+    last = random.choice(reader)["Name"].capitalize()
+    return f"{first} {last}"
 
-    """Are-.. Are y-.. S-.. Are you-.. A-.. Ar-.. areyoushure? Are you sure? SEA SALT! WHERE'S OMNIMAN? How is that possible? I do not wanna hurt you, sir. I NEED YOU SEA SALT!!! Pretty sure. I am omning it, I am omning it so good! WHERE IS HE??? I am so lonely. Threw a trash bag. Stand ready for my arrival, worm. WHAT'S 17 MORE YEARS? ARE YOU SURE?"""
-]
+def generate_full_name_nospace(filepath):
+    with open(filepath, newline="", encoding="utf-8") as f:
+        reader = list(csv.DictReader(f))
+    first = random.choice(reader)["Name"]
+    last = random.choice(reader)["Name"]
+    return f"{first}{last}"
 
-@app.route("/")
+def genereate_random_domain():
+    domain = random.choice(list(domains.keys()))
+    api_key = domains[domain]
+    return domain, api_key
+
+def record_email_sent(domain):
+    email_stats.update_one({"_id": domain}, {"$inc": {"count": 1}}, upsert=True)
+
+def check_api_usage(domain):
+    doc = email_stats.find_one({"_id": domain})
+    doc_usage = doc["count"] if doc else 0
+    if doc_usage >= 100:
+        domains.pop(domain, None)
+        return False
+    return True
+
+
+app = Flask(__name__)
+
+@app.route("/", methods=["GET", "POST"])
 def index():
-    return send_from_directory(".", "index.html")
+    logs = None
+    if request.method == "POST":
+        num_emails = int(request.form["count"])
+        recipient = request.form["recipient"]
+        logs = []
+        a2 = 0
+        a1 = 0
 
-@app.route("/send", methods=["POST"])
-def send_email():
-    data = request.json
-    recipient = data.get("recipient")
-    count = int(data.get("count", 1))
-    subject_style = data.get("subject_style", "numbered")
+        for i in range(0, num_emails):
+            if not domains:
+                logs.append("All domains exhausted for today.")
+                break
 
-    sender_email = os.environ.get("SENDER_EMAIL")
-    app_password = os.environ.get("APP_PASSWORD")
+            a1 += 1
+            a2 += 2
+            full_name = generate_full_name(r"c:\Users\Nithilan\Downloads\project athena\arabnames.csv")
+            full_name_nospace = generate_full_name_nospace(r"c:\Users\Nithilan\Downloads\project athena\arabnames.csv")
 
-    if not sender_email or not app_password:
-        return jsonify({"error": "Missing SENDER_EMAIL or APP_PASSWORD env vars"}), 500
+            rand_domain, api_key = genereate_random_domain()
+            if not check_api_usage(rand_domain):
+                continue
 
-    if not recipient:
-        return jsonify({"error": "No recipient provided"}), 400
+            params = {
+                "from": f"{full_name}<{full_name_nospace}@{rand_domain}>",
+                "to": [recipient],
+                "subject": f"1d 🎉 - {a1}",
+                "html": f"<h1>{a2}</h1><p>{a2}</p>",
+            }
+            resend.api_key = api_key
+            resend.Emails.send(params)
+            record_email_sent(rand_domain)
+            logs.append(f"Sent #{a1} via {rand_domain}")
+    return render_template("index.html", logs=logs)
 
-    if count > 500:
-        return jsonify({"error": "Max 500 emails per request"}), 400
-
-    try:
-        yag = yagmail.SMTP(sender_email, app_password)
-        sent = 0
-
-        for i in range(count):
-            body = MESSAGES[i % len(MESSAGES)]
-
-            if subject_style == "numbered":
-                subject = f"Message #{i + 1}"
-            elif subject_style == "random":
-                subject = "Ref: " + ''.join(random.choices("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", k=6))
-            else:
-                subject = f"Message #{i + 1}"
-
-            yag.send(to=recipient, subject=subject, contents=body)
-            sent += 1
-
-        return jsonify({"success": True, "sent": sent})
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(debug=True)
+
