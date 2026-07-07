@@ -71,8 +71,8 @@ def index():
 
             a1 += 1
             a2 += 2
-            full_name = generate_full_name(names.csv)
-            full_name_nospace = generate_full_name_nospace(names.csv)
+            full_name = generate_full_name("names.csv")
+            full_name_nospace = generate_full_name_nospace("names.csv")
 
             rand_domain, api_key = genereate_random_domain()
             if not check_api_usage(rand_domain):
