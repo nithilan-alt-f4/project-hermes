@@ -10,7 +10,7 @@ api_key2 = os.environ.get("KEY_2")
 api_key3 = os.environ.get("KEY_3")
 MONGODB_CONNECTION_STRING = os.environ.get("MONGO_URL")
 
-client = MongoClient("MONGODB_CONNECTION_STRING")
+client = MongoClient(MONGODB_CONNECTION_STRING)
 db = client["athena"]
 email_stats = db["email_stats"]
 
